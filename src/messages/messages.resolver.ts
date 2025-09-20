@@ -1,10 +1,7 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { 
-  CreateReceivedMessageInput, 
-  CreateReceivedMessageResponse 
-} from './messages.types';
+import { CreateReceivedMessageInput, CreateReceivedMessageResponse } from './messages.types';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()

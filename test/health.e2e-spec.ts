@@ -40,7 +40,7 @@ describe('Health Query (e2e)', () => {
       .expect(200);
 
     expect(response.body.data.health).toEqual({
-      status: 'healthy'
+      status: 'healthy',
     });
   });
 
@@ -62,7 +62,7 @@ describe('Health Query (e2e)', () => {
       .expect(200);
 
     expect(response.body.data.health).toEqual({
-      status: 'unhealthy'
+      status: 'unhealthy',
     });
   });
 
@@ -84,8 +84,7 @@ describe('Health Query (e2e)', () => {
       .expect(200);
 
     expect(response.body.data.health).toEqual({
-      status: 'unhealthy'
+      status: 'unhealthy',
     });
   });
 });
-

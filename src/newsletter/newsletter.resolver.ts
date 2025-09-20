@@ -1,9 +1,9 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { 
-  CreateNewsletterSubscriptionInput, 
-  CreateNewsletterSubscriptionResponse 
+import {
+  CreateNewsletterSubscriptionInput,
+  CreateNewsletterSubscriptionResponse,
 } from './newsletter.types';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 

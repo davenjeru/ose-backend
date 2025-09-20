@@ -19,12 +19,12 @@ import { MessagesModule } from './messages/messages.module';
       useFactory: (configService: ConfigService) => {
         const nodeEnv = configService.get('NODE_ENV') || 'development';
         const isDevelopment = nodeEnv === 'development';
-        
+
         return {
           autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
           sortSchema: true,
           playground: isDevelopment,
-          introspection: isDevelopment
+          introspection: isDevelopment,
         };
       },
     }),

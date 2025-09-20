@@ -44,7 +44,9 @@ describe('NewsletterResolver', () => {
     };
 
     it('should successfully create a newsletter subscription', async () => {
-      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(mockSubscription);
+      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(
+        mockSubscription,
+      );
 
       const result = await resolver.createNewsletterSubscription(validInput);
 
@@ -74,7 +76,9 @@ describe('NewsletterResolver', () => {
         email: 'test@example.com',
       };
 
-      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(expectedSubscription);
+      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(
+        expectedSubscription,
+      );
 
       await resolver.createNewsletterSubscription(inputWithWhitespace);
 
@@ -86,13 +90,10 @@ describe('NewsletterResolver', () => {
     });
 
     it('should handle duplicate email error (P2002)', async () => {
-      const duplicateError = new PrismaClientKnownRequestError(
-        'Unique constraint failed',
-        {
-          code: 'P2002',
-          clientVersion: '6.16.2',
-        },
-      );
+      const duplicateError = new PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '6.16.2',
+      });
 
       (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(duplicateError);
 
@@ -117,15 +118,14 @@ describe('NewsletterResolver', () => {
     });
 
     it('should handle other Prisma errors that are not P2002', async () => {
-      const otherPrismaError = new PrismaClientKnownRequestError(
-        'Some other constraint failed',
-        {
-          code: 'P2001',
-          clientVersion: '6.16.2',
-        },
-      );
+      const otherPrismaError = new PrismaClientKnownRequestError('Some other constraint failed', {
+        code: 'P2001',
+        clientVersion: '6.16.2',
+      });
 
-      (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(otherPrismaError);
+      (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(
+        otherPrismaError,
+      );
 
       const result = await resolver.createNewsletterSubscription(validInput);
 
