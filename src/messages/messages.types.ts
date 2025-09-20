@@ -1,5 +1,5 @@
 import { ObjectType, Field, InputType } from '@nestjs/graphql';
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 @ObjectType()
 export class ReceivedMessage {
@@ -20,9 +20,6 @@ export class ReceivedMessage {
 
   @Field()
   createdAt: Date;
-
-  @Field()
-  updatedAt: Date;
 }
 
 @InputType()
@@ -45,6 +42,7 @@ export class CreateReceivedMessageInput {
   @Field()
   @IsString({ message: 'Message must be a string' })
   @IsNotEmpty({ message: 'Message is required' })
+  @MaxLength(1000, { message: 'Message cannot exceed 1000 characters' })
   message: string;
 }
 

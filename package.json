@@ -24,7 +24,8 @@
     "db:studio": "prisma studio",
     "lint:check": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "npm run db:generate"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
