@@ -29,11 +29,12 @@ model User {
 
 model ReceivedMessage {
   id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content      String
+  content      String @db.VarChar(1000)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @db.Uuid
   createdAt DateTime @default(now())
 
+  @@unique([userId, content])
   @@map("received_messages")
 }
 

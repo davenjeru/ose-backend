@@ -43,20 +43,35 @@ export class MessagesResolver {
       });
     }
 
-    // Create the message
+    // Upsert the message (create if new, return existing if duplicate)
     try {
-      const receivedMessage = await this.prismaService.receivedMessage.create({
-        data: {
+      const trimmedMessage = input.message.trim();
+      const receivedMessage = await this.prismaService.receivedMessage.upsert({
+        where: {
+          userId_content: {
+            userId: user.id,
+            content: trimmedMessage,
+          },
+        },
+        update: {
+          // No updates needed for existing messages - just return the existing one
+        },
+        create: {
           userId: user.id,
-          content: input.message.trim(),
+          content: trimmedMessage,
         },
       });
 
-      this.logger.log(`Message received from: ${input.email}`);
+      const isNewMessage = receivedMessage.createdAt.getTime() > Date.now() - 1000; // Check if created within last second
+      this.logger.log(
+        `Message ${isNewMessage ? 'received' : 'already exists'} from: ${input.email}`,
+      );
 
       return {
         success: true,
-        message: 'Message received successfully',
+        message: isNewMessage
+          ? 'Message received successfully'
+          : 'Message already exists - returning existing message',
         receivedMessage: {
           id: receivedMessage.id,
           email: user.email,
@@ -67,7 +82,7 @@ export class MessagesResolver {
         },
       };
     } catch (error) {
-      this.logger.error('Failed to create received message', error);
+      this.logger.error('Failed to upsert received message', error);
 
       // Handle other database errors
       return {

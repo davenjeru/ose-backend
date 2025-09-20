@@ -9,14 +9,14 @@ describe('MessagesResolver', () => {
 
   const mockPrismaService = {
     user: {
-      findFirstOrThrow: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
     receivedMessage: {
-      create: jest.fn(),
+      upsert: jest.fn(),
     },
-  };
+  } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -57,35 +57,48 @@ describe('MessagesResolver', () => {
       id: 'message-uuid',
       userId: 'user-uuid',
       content: 'This is a test message',
-      createdAt: new Date('2025-01-01T00:00:00Z'),
+      createdAt: new Date(), // Current timestamp for new messages
     };
 
     it('should create a message for existing user', async () => {
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockResolvedValue(mockUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
       (prismaService.user.update as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await resolver.createReceivedMessage(validInput);
 
-      expect(result).toEqual({
-        success: true,
-        message: 'Message received successfully',
-        receivedMessage: {
-          id: 'message-uuid',
-          email: 'test@example.com',
-          fullName: 'John Doe',
-          linkedInProfile: null,
-          message: 'This is a test message',
-          createdAt: new Date('2025-01-01T00:00:00Z'),
-        },
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Message received successfully');
+      expect(result.receivedMessage).toMatchObject({
+        id: 'message-uuid',
+        email: 'test@example.com',
+        fullName: 'John Doe',
+        linkedInProfile: null,
+        message: 'This is a test message',
       });
+      expect(result.receivedMessage?.createdAt).toBeInstanceOf(Date);
 
-      expect(prismaService.user.findFirstOrThrow).toHaveBeenCalledWith({
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
       });
 
-      expect(prismaService.receivedMessage.create).toHaveBeenCalledWith({
+      expect(prismaService.user.update).toHaveBeenCalledWith({
         data: {
+          fullName: 'John Doe',
+          linkedInProfile: null,
+        },
+        where: { email: 'test@example.com' },
+      });
+
+      expect(prismaService.receivedMessage.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_content: {
+            userId: 'user-uuid',
+            content: 'This is a test message',
+          },
+        },
+        update: {},
+        create: {
           userId: 'user-uuid',
           content: 'This is a test message',
         },
@@ -95,26 +108,22 @@ describe('MessagesResolver', () => {
     });
 
     it('should create a new user when user does not exist', async () => {
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockRejectedValue(
-        new Error('User not found'),
-      );
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaService.user.create as jest.Mock).mockResolvedValue(mockUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
 
       const result = await resolver.createReceivedMessage(validInput);
 
-      expect(result).toEqual({
-        success: true,
-        message: 'Message received successfully',
-        receivedMessage: {
-          id: 'message-uuid',
-          email: 'test@example.com',
-          fullName: 'John Doe',
-          linkedInProfile: null,
-          message: 'This is a test message',
-          createdAt: new Date('2025-01-01T00:00:00Z'),
-        },
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Message received successfully');
+      expect(result.receivedMessage).toMatchObject({
+        id: 'message-uuid',
+        email: 'test@example.com',
+        fullName: 'John Doe',
+        linkedInProfile: null,
+        message: 'This is a test message',
       });
+      expect(result.receivedMessage?.createdAt).toBeInstanceOf(Date);
 
       expect(prismaService.user.create).toHaveBeenCalledWith({
         data: {
@@ -124,12 +133,21 @@ describe('MessagesResolver', () => {
         },
       });
 
-      expect(prismaService.receivedMessage.create).toHaveBeenCalledWith({
-        data: {
+      expect(prismaService.receivedMessage.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_content: {
+            userId: 'user-uuid',
+            content: 'This is a test message',
+          },
+        },
+        update: {},
+        create: {
           userId: 'user-uuid',
           content: 'This is a test message',
         },
       });
+
+      expect(prismaService.user.update).not.toHaveBeenCalled();
     });
 
     it('should create user with LinkedIn profile when provided', async () => {
@@ -143,11 +161,9 @@ describe('MessagesResolver', () => {
         linkedInProfile: 'https://linkedin.com/in/johndoe',
       };
 
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockRejectedValue(
-        new Error('User not found'),
-      );
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaService.user.create as jest.Mock).mockResolvedValue(mockUserWithLinkedIn);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
 
       const result = await resolver.createReceivedMessage(inputWithLinkedIn);
 
@@ -170,15 +186,13 @@ describe('MessagesResolver', () => {
         message: '  This is a test message  ',
       };
 
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockRejectedValue(
-        new Error('User not found'),
-      );
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaService.user.create as jest.Mock).mockResolvedValue(mockUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
 
       await resolver.createReceivedMessage(inputWithWhitespace);
 
-      expect(prismaService.user.findFirstOrThrow).toHaveBeenCalledWith({
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
       });
 
@@ -190,8 +204,15 @@ describe('MessagesResolver', () => {
         },
       });
 
-      expect(prismaService.receivedMessage.create).toHaveBeenCalledWith({
-        data: {
+      expect(prismaService.receivedMessage.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_content: {
+            userId: 'user-uuid',
+            content: 'This is a test message',
+          },
+        },
+        update: {},
+        create: {
           userId: 'user-uuid',
           content: 'This is a test message',
         },
@@ -204,11 +225,9 @@ describe('MessagesResolver', () => {
         linkedInProfile: '   ',
       };
 
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockRejectedValue(
-        new Error('User not found'),
-      );
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaService.user.create as jest.Mock).mockResolvedValue(mockUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
 
       await resolver.createReceivedMessage(inputWithEmptyLinkedIn);
 
@@ -221,9 +240,10 @@ describe('MessagesResolver', () => {
       });
     });
 
-    it('should handle message creation failure', async () => {
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockResolvedValue(mockUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockRejectedValue(
+    it('should handle message upsert failure', async () => {
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockRejectedValue(
         new Error('Database error'),
       );
 
@@ -236,9 +256,7 @@ describe('MessagesResolver', () => {
     });
 
     it('should throw error when user creation fails', async () => {
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockRejectedValue(
-        new Error('User not found'),
-      );
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(null);
       (prismaService.user.create as jest.Mock).mockRejectedValue(new Error('User creation failed'));
 
       // The resolver doesn't handle user creation errors, so it should throw
@@ -254,8 +272,8 @@ describe('MessagesResolver', () => {
         },
       });
 
-      // Should not reach message creation due to user creation failure
-      expect(prismaService.receivedMessage.create).not.toHaveBeenCalled();
+      // Should not reach message upsert due to user creation failure
+      expect(prismaService.receivedMessage.upsert).not.toHaveBeenCalled();
     });
 
     it('should update the existing user when found by email', async () => {
@@ -265,16 +283,62 @@ describe('MessagesResolver', () => {
         linkedInProfile: 'https://linkedin.com/in/different',
       };
 
-      (prismaService.user.findFirstOrThrow as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
       (prismaService.user.update as jest.Mock).mockResolvedValue(existingUser);
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockReceivedMessage);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(mockReceivedMessage);
 
       const result = await resolver.createReceivedMessage(validInput);
 
       expect(result.receivedMessage?.fullName).toBe('Different Name');
       expect(result.receivedMessage?.linkedInProfile).toBe('https://linkedin.com/in/different');
       expect(prismaService.user.create).not.toHaveBeenCalled();
-      expect(prismaService.user.update).toHaveBeenCalled();
+      expect(prismaService.user.update).toHaveBeenCalledWith({
+        data: {
+          fullName: 'John Doe',
+          linkedInProfile: null,
+        },
+        where: { email: 'test@example.com' },
+      });
+    });
+
+    it('should return existing message when duplicate content is sent', async () => {
+      const existingMessage = {
+        ...mockReceivedMessage,
+        createdAt: new Date('2025-01-01T00:00:00Z'), // Old timestamp
+      };
+
+      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.user.update as jest.Mock).mockResolvedValue(mockUser);
+      (prismaService.receivedMessage.upsert as jest.Mock).mockResolvedValue(existingMessage);
+
+      const result = await resolver.createReceivedMessage(validInput);
+
+      expect(result).toEqual({
+        success: true,
+        message: 'Message already exists - returning existing message',
+        receivedMessage: {
+          id: 'message-uuid',
+          email: 'test@example.com',
+          fullName: 'John Doe',
+          linkedInProfile: null,
+          message: 'This is a test message',
+          createdAt: new Date('2025-01-01T00:00:00Z'),
+        },
+      });
+
+      expect(prismaService.receivedMessage.upsert).toHaveBeenCalledWith({
+        where: {
+          userId_content: {
+            userId: 'user-uuid',
+            content: 'This is a test message',
+          },
+        },
+        update: {},
+        create: {
+          userId: 'user-uuid',
+          content: 'This is a test message',
+        },
+      });
     });
   });
 });
