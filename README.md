@@ -35,13 +35,15 @@ The GraphQL endpoint is available at: http://localhost:3000/graphql
 
 ```graphql
 query {
-  hello
+  health {
+    status
+  }
 }
 ```
 
 This query returns:
-- `"hi there"` if the database connection is successful
-- `"hello, but database connection failed"` if the database connection fails
+- `{ status: "healthy" }` if the database connection is successful
+- `{ status: "unhealthy" }` if the database connection fails
 
 ## Database Setup
 
@@ -68,9 +70,9 @@ src/
 ├── app.module.ts          # Main application module
 ├── main.ts                # Application entry point
 ├── schema.gql             # Generated GraphQL schema
-├── hello/                 # Hello module with GraphQL resolver
-│   ├── hello.module.ts
-│   └── hello.resolver.ts
+├── health/                # Health module with GraphQL resolver
+│   ├── health.module.ts
+│   └── health.resolver.ts
 └── prisma/                # Prisma service and module
     ├── prisma.module.ts
     └── prisma.service.ts

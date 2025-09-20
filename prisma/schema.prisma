@@ -6,19 +6,30 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [pgcrypto]
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
+model ReceivedMessage {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String   @unique
-  name      String?
+  fullName      String
+  linkedInProfile      String?
+  message      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("users")
+  @@map("received_messages")
+}
+
+model NewsletterSubscription {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+
+  @@map("newsletter_subscriptions")
 }

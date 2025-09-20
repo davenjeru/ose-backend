@@ -1,25 +1,26 @@
 import { Resolver, Query } from '@nestjs/graphql';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HealthStatus } from '../health/health.types';
 
 @Injectable()
 @Resolver()
-export class HelloResolver {
+export class HealthResolver {
   constructor(private readonly prismaService: PrismaService) {}
 
-  @Query(() => String)
-  async hello(): Promise<string> {
+  @Query(() => HealthStatus)
+  async health(): Promise<HealthStatus> {
     try {
       const isConnected = await this.prismaService.isConnected();
       
-      if (isConnected) {
-        return 'hi there';
-      } else {
-        return 'hello, but database connection failed';
-      }
+      return {
+        status: isConnected ? 'healthy' : 'unhealthy'
+      };
     } catch (error) {
       console.error('Database connection error:', error);
-      return 'hello, but database connection failed';
+      return {
+        status: 'unhealthy'
+      };
     }
   }
 }
