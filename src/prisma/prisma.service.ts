@@ -27,7 +27,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     if (!this.connected) {
       return false;
     }
-    
+
     try {
       await this.$queryRaw`SELECT 1`;
       return true;

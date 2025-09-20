@@ -12,14 +12,14 @@ export class HealthResolver {
   async health(): Promise<HealthStatus> {
     try {
       const isConnected = await this.prismaService.isConnected();
-      
+
       return {
-        status: isConnected ? 'healthy' : 'unhealthy'
+        status: isConnected ? 'healthy' : 'unhealthy',
       };
     } catch (error) {
       console.error('Database connection error:', error);
       return {
-        status: 'unhealthy'
+        status: 'unhealthy',
       };
     }
   }

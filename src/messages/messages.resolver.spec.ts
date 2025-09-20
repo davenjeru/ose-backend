@@ -90,7 +90,9 @@ describe('MessagesResolver', () => {
         linkedInProfile: 'https://linkedin.com/in/johndoe',
       };
 
-      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(mockMessageWithLinkedIn);
+      (prismaService.receivedMessage.create as jest.Mock).mockResolvedValue(
+        mockMessageWithLinkedIn,
+      );
 
       const result = await resolver.createReceivedMessage(inputWithLinkedIn);
 
@@ -153,13 +155,10 @@ describe('MessagesResolver', () => {
     });
 
     it('should handle duplicate email error (P2002)', async () => {
-      const duplicateError = new PrismaClientKnownRequestError(
-        'Unique constraint failed',
-        {
-          code: 'P2002',
-          clientVersion: '6.16.2',
-        },
-      );
+      const duplicateError = new PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '6.16.2',
+      });
 
       (prismaService.receivedMessage.create as jest.Mock).mockRejectedValue(duplicateError);
 
@@ -184,13 +183,10 @@ describe('MessagesResolver', () => {
     });
 
     it('should handle other Prisma errors that are not P2002', async () => {
-      const otherPrismaError = new PrismaClientKnownRequestError(
-        'Some other constraint failed',
-        {
-          code: 'P2001',
-          clientVersion: '6.16.2',
-        },
-      );
+      const otherPrismaError = new PrismaClientKnownRequestError('Some other constraint failed', {
+        code: 'P2001',
+        clientVersion: '6.16.2',
+      });
 
       (prismaService.receivedMessage.create as jest.Mock).mockRejectedValue(otherPrismaError);
 
