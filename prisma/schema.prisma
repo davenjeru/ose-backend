@@ -15,14 +15,24 @@ datasource db {
   extensions = [pgcrypto]
 }
 
-model ReceivedMessage {
+model User {
   id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email     String   @unique
   fullName      String
   linkedInProfile      String?
-  message      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  messages ReceivedMessage[]
+
+  @@map("users")
+}
+
+model ReceivedMessage {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content      String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+  createdAt DateTime @default(now())
 
   @@map("received_messages")
 }

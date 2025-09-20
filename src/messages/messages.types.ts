@@ -20,9 +20,6 @@ export class ReceivedMessage {
 
   @Field()
   createdAt: Date;
-
-  @Field()
-  updatedAt: Date;
 }
 
 @InputType()
