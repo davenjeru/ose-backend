@@ -42,9 +42,12 @@ mutation CreateNewsletterSubscription {
 {
   "data": {
     "createNewsletterSubscription": {
-      "success": false,
-      "message": "This email is already subscribed to the newsletter",
-      "subscription": null
+      "success": true,
+      "message": "Successfully subscribed to newsletter",
+      "subscription": {
+        "id": "same-uuid",
+        "email": "user@example.com"
+      }
     }
   }
 }
@@ -400,7 +403,7 @@ mutation TestMessageTooLong {
 ### Newsletter Subscription
 
 - ✅ Email validation (required, must be valid email format)
-- ✅ Duplicate email handling (graceful error message)
+- ✅ **Subscription deduplication**: Same email returns existing subscription (upsert)
 - ✅ Email normalization (lowercase, trimmed)
 - ✅ Comprehensive unit tests (5 test cases)
 - ✅ E2E tests (5 test cases)
@@ -482,6 +485,16 @@ curl -X POST http://localhost:3000/graphql \
 ```
 
 ## Key Behaviors Summary
+
+### Newsletter Subscriptions
+
+| Scenario                   | Behavior                      | Subscription ID | Response Message                        |
+| -------------------------- | ----------------------------- | --------------- | --------------------------------------- |
+| **New email subscription** | Creates new subscription      | New unique ID   | "Successfully subscribed to newsletter" |
+| **Duplicate email**        | Returns existing subscription | **Same ID**     | "Successfully subscribed to newsletter" |
+| **Invalid email format**   | Validation error              | N/A             | "Please provide a valid email address"  |
+
+### Received Messages
 
 | Scenario                              | Behavior                 | Message ID    | Response Message                                      |
 | ------------------------------------- | ------------------------ | ------------- | ----------------------------------------------------- |
