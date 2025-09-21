@@ -1,21 +1,27 @@
 # OSE Backend
 
+[![Coverage Status](https://coveralls.io/repos/github/davenjeru/ose-backend/badge.svg?branch=main)](https://coveralls.io/github/davenjeru/ose-backend?branch=main)
+[![Unit Tests](https://github.com/davenjeru/ose-backend/actions/workflows/test-and-coverage.yml/badge.svg)](https://github.com/davenjeru/ose-backend/actions/workflows/test-and-coverage.yml)
+
 A NestJS GraphQL backend with TypeScript and Prisma PostgreSQL integration.
 
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Set up environment variables:
+
    ```bash
    cp .env.example .env
    # Update DATABASE_URL in .env with your PostgreSQL connection string
    ```
 
 3. Generate Prisma client:
+
    ```bash
    npm run db:generate
    ```
@@ -42,6 +48,7 @@ query {
 ```
 
 This query returns:
+
 - `{ status: "healthy" }` if the database connection is successful
 - `{ status: "unhealthy" }` if the database connection fails
 
