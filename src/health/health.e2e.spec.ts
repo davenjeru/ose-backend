@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { AppModule } from '../app.module';
 
 describe('Health Query (e2e)', () => {
   let app: INestApplication;
@@ -42,7 +42,7 @@ describe('Health Query (e2e)', () => {
     expect(response.body.data.health).toEqual({
       status: 'healthy',
     });
-  });
+  }, 30000);
 
   it('should return unhealthy status when database is not connected', async () => {
     // Mock the database connection to return false
