@@ -5,7 +5,6 @@ import {
   CreateNewsletterSubscriptionInput,
   CreateNewsletterSubscriptionResponse,
 } from './newsletter.types';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 @Resolver()
@@ -19,13 +18,20 @@ export class NewsletterResolver {
     @Args('input') input: CreateNewsletterSubscriptionInput,
   ): Promise<CreateNewsletterSubscriptionResponse> {
     try {
-      const subscription = await this.prismaService.newsletterSubscription.create({
-        data: {
-          email: input.email.toLowerCase().trim(),
+      const normalizedEmail = input.email.toLowerCase().trim();
+      const subscription = await this.prismaService.newsletterSubscription.upsert({
+        where: {
+          email: normalizedEmail,
+        },
+        update: {
+          // No updates needed for existing subscriptions - just return the existing one
+        },
+        create: {
+          email: normalizedEmail,
         },
       });
 
-      this.logger.log(`Newsletter subscription created for email: ${input.email}`);
+      this.logger.log(`Newsletter subscription processed for email: ${input.email}`);
 
       return {
         success: true,
@@ -36,15 +42,7 @@ export class NewsletterResolver {
         },
       };
     } catch (error) {
-      this.logger.error('Failed to create newsletter subscription', error);
-
-      // Handle unique constraint violation (duplicate email)
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-        return {
-          success: false,
-          message: 'This email is already subscribed to the newsletter',
-        };
-      }
+      this.logger.error('Failed to process newsletter subscription', error);
 
       // Handle other database errors
       return {

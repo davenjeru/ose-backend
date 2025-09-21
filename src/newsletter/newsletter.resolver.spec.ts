@@ -10,7 +10,7 @@ describe('NewsletterResolver', () => {
 
   const mockPrismaService = {
     newsletterSubscription: {
-      create: jest.fn(),
+      upsert: jest.fn(),
     },
   };
 
@@ -44,7 +44,7 @@ describe('NewsletterResolver', () => {
     };
 
     it('should successfully create a newsletter subscription', async () => {
-      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(
+      (prismaService.newsletterSubscription.upsert as jest.Mock).mockResolvedValue(
         mockSubscription,
       );
 
@@ -59,8 +59,12 @@ describe('NewsletterResolver', () => {
         },
       });
 
-      expect(prismaService.newsletterSubscription.create).toHaveBeenCalledWith({
-        data: {
+      expect(prismaService.newsletterSubscription.upsert).toHaveBeenCalledWith({
+        where: {
+          email: 'test@example.com',
+        },
+        update: {},
+        create: {
           email: 'test@example.com',
         },
       });
@@ -76,38 +80,58 @@ describe('NewsletterResolver', () => {
         email: 'test@example.com',
       };
 
-      (prismaService.newsletterSubscription.create as jest.Mock).mockResolvedValue(
+      (prismaService.newsletterSubscription.upsert as jest.Mock).mockResolvedValue(
         expectedSubscription,
       );
 
       await resolver.createNewsletterSubscription(inputWithWhitespace);
 
-      expect(prismaService.newsletterSubscription.create).toHaveBeenCalledWith({
-        data: {
+      expect(prismaService.newsletterSubscription.upsert).toHaveBeenCalledWith({
+        where: {
+          email: 'test@example.com',
+        },
+        update: {},
+        create: {
           email: 'test@example.com',
         },
       });
     });
 
-    it('should handle duplicate email error (P2002)', async () => {
-      const duplicateError = new PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '6.16.2',
-      });
+    it('should return existing subscription for duplicate email (upsert behavior)', async () => {
+      const existingSubscription = {
+        id: 'existing-uuid',
+        email: 'test@example.com',
+      };
 
-      (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(duplicateError);
+      (prismaService.newsletterSubscription.upsert as jest.Mock).mockResolvedValue(
+        existingSubscription,
+      );
 
       const result = await resolver.createNewsletterSubscription(validInput);
 
       expect(result).toEqual({
-        success: false,
-        message: 'This email is already subscribed to the newsletter',
+        success: true,
+        message: 'Successfully subscribed to newsletter',
+        subscription: {
+          id: 'existing-uuid',
+          email: 'test@example.com',
+        },
+      });
+
+      expect(prismaService.newsletterSubscription.upsert).toHaveBeenCalledWith({
+        where: {
+          email: 'test@example.com',
+        },
+        update: {},
+        create: {
+          email: 'test@example.com',
+        },
       });
     });
 
     it('should handle other database errors', async () => {
       const genericError = new Error('Database connection failed');
-      (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(genericError);
+      (prismaService.newsletterSubscription.upsert as jest.Mock).mockRejectedValue(genericError);
 
       const result = await resolver.createNewsletterSubscription(validInput);
 
@@ -117,13 +141,13 @@ describe('NewsletterResolver', () => {
       });
     });
 
-    it('should handle other Prisma errors that are not P2002', async () => {
+    it('should handle other Prisma errors', async () => {
       const otherPrismaError = new PrismaClientKnownRequestError('Some other constraint failed', {
         code: 'P2001',
         clientVersion: '6.16.2',
       });
 
-      (prismaService.newsletterSubscription.create as jest.Mock).mockRejectedValue(
+      (prismaService.newsletterSubscription.upsert as jest.Mock).mockRejectedValue(
         otherPrismaError,
       );
 
