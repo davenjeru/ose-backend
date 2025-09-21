@@ -1,7 +1,7 @@
 # OSE Backend
 
-[![Coverage Status](https://coveralls.io/repos/github/davenjeru/ose-backend/badge.svg?branch=main)](https://coveralls.io/github/davenjeru/ose-backend?branch=main)
 [![Unit Tests](https://github.com/davenjeru/ose-backend/actions/workflows/test-and-coverage.yml/badge.svg)](https://github.com/davenjeru/ose-backend/actions/workflows/test-and-coverage.yml)
+[![Coverage Status](https://coveralls.io/repos/github/davenjeru/ose-backend/badge.svg?branch=main)](https://coveralls.io/github/davenjeru/ose-backend?branch=main)
 
 A NestJS GraphQL backend with TypeScript and Prisma PostgreSQL integration.
 
